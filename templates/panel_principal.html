@@ -6,6 +6,44 @@
     <title>Document</title>
 </head>
 <body>
-    <h1>Hola</h1>
+    <header>
+        <nav>
+            {%if usuarioRol=='vendedor'%}
+                <a href="{{url_for('gestion_inventario')}}">Inventario</a>
+            {%endif%}
+            {%if usuarioRol!='vendedor' and usuarioRol!='reponedor'%}
+                <a href="{{url_for('gestion_pedidos')}}">Pedido</a>
+            {%endif%}
+            {%if usuarioRol!='reponedor' and usuarioRol!='vendedor'%}
+                <a href="{{url_for('reportes')}}">Reporte</a>
+            {%endif%}
+            {%if usuarioRol=='admi'%}
+                <a href="{{url_for('gestion_usuario')}}">Usuarios</a>
+            {%endif%}
+            {%if usuarioRol=='vendedor'%}
+                <a href="{{url_for('ventas')}}">Ventas</a>
+            {%endif%}
+        </nav>
+        <div id="user-section">
+            <span>👤 {{ usuarioNombre }} {{usuarioApellido}} {{usuarioRol}}</span>
+            <a href="{{ url_for('logout') }}" class="boton">Cerrar Sesión</a>
+        </div>
+    </header>
+    <main>
+        <h2>Bienvenido al Panel Principal</h2>
+        <p>Selecciona una opción del menú superior para gestionar inventario, pedidos o reportes.</p>
+
+        <section>
+            <h3>Últimas actualizaciones</h3>
+            <ul>
+                <li>Nuevo producto agregado al inventario.</li>
+                <li>Pedido enviado desde Sucursal Central a Sucursal Norte.</li>
+                <li>Reporte semanal generado correctamente.</li>
+            </ul>
+        </section>
+    </main>
+    <footer>
+        © 2025 Supermercado Jumbox - Todos los derechos reservados.
+    </footer>
 </body>
 </html>

@@ -30,7 +30,7 @@ if base_de_datos_vacia():
 
     db.agregar_sucursal("Sucursal Central", "Av. Siempre Viva 123", "123456789")
 
-    db.agregar_usuario("Juan", "Pérez", "admin@correo.com", "1234", "admin", 1)
+    db.agregar_usuario("Juan", "Pérez", "admi@correo.com", "1234", "admi", 1)
     db.agregar_usuario("Carla", "Rodríguez", "carla.encargada@correo.com", "1234", "encargado", 1)
     db.agregar_usuario("Lucas", "Martínez", "lucas.reponedor@correo.com", "1234", "reponedor", 1)
     db.agregar_usuario("matias", "Martínez", "matias.vendedor@correo.com", "1234", "vendedor", 1)
@@ -47,7 +47,7 @@ def panel_principal():
     if "rol" not in session:
         return redirect(url_for("login"))  # si no está logueado
     
-    return render_template("panel_principal.html")
+    return render_template("panel_principal.html",usuarioNombre=session["nombre"], usuarioApellido=session["apellido"], usuarioRol=session["rol"])
 
 @app.route("/gestion_inventario")
 def gestion_inventario():
@@ -55,7 +55,7 @@ def gestion_inventario():
         return redirect(url_for("login"))  # si no está logueado
     
     if session["rol"] == "vendedor":
-        return "Acceso denegado. No tenés permisos para entrar acá.", 403 #solo ingresaran los usuarios administradores,encargado
+        return "Acceso denegado. No tenés permisos para entrar acá.", 403 #solo ingresaran los usuarios administradores,encargado,reponedor
     
     return #agregar tamblate
 
@@ -64,7 +64,7 @@ def gestion_pedidos():
     if "rol" not in session:
         return redirect(url_for("login"))  # si no está logueado
     
-    if session["rol"] != "vendedor" or session["rol"] == "reponedor":
+    if session["rol"] == "vendedor" or session["rol"] == "reponedor":
         return "Acceso denegado. No tenés permisos para entrar acá.", 403 #solo ingresaran los usuarios administradores, encargado
 
     return  #agregar tamblate
