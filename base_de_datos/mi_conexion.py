@@ -43,6 +43,9 @@ class Connexion:
         """, (id,))
         self.conexion.commit()
 
+    def mostrar_sucursales(self):
+        self.cursor.execute("SELECT * FROM sucursal")
+        return self.cursor.fetchall()
 
     #                     TABLA USUARIO
 
@@ -408,7 +411,7 @@ class Connexion:
         self.cursor.execute("DELETE FROM inventario WHERE id_producto=?", (id,))
         self.cursor.execute("DELETE FROM producto WHERE id=?", (id,))
         self.conexion.commit()
-
+    
 
     #               CERRAR LA BASE DE DATOS
 

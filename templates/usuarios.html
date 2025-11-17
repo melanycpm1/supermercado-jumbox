@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios</title>
+
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+</head>
+
+<body>
+
+<header>
+    <nav>
+        <a href="{{url_for('panel_principal')}}">Home</a>
+        {% if usuarioRol!='vendedor' %}
+        <a href="{{url_for('gestion_inventario')}}">Inventario</a>
+        {% endif %}
+        {% if usuarioRol!='vendedor' and usuarioRol!='reponedor' %}
+        <a href="{{url_for('gestion_pedidos')}}">Pedido</a>
+        {% endif %}
+        {% if usuarioRol!='reponedor' and usuarioRol!='vendedor' %}
+        <a href="{{url_for('reportes')}}">Reporte</a>
+        {% endif %}
+        {% if usuarioRol=='vendedor' %}
+        <a href="{{url_for('ventas')}}">Ventas</a>
+        {% endif %}
+    </nav>
+    <div id="user-section">
+        <span>👤 {{ usuarioNombre }} {{usuarioApellido}} - {{usuarioRol}}</span>
+        <a href="{{ url_for('logout') }}" class="boton">Cerrar Sesión</a>
+    </div>
+</header>
+
+<main class="container mt-4">
+
+    <h1>Gestión de Usuarios</h1>
+
+    <!-- CREAR USUARIO -->
+    <h2>Crear usuario</h2>
+    <form action="{{ url_for('crear_usuario') }}" method="POST" class="mb-4">
+        <input type="text" name="nombre" placeholder="Nombre" required>
+        <input type="text" name="apellido" placeholder="Apellido" required>
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="password" name="contrasena" placeholder="Contraseña" required>
+
+        <select name="rol" required>
+            <option value="admi">Admi</option>
+            <option value="vendedor">Vendedor</option>
+            <option value="reponedor">Reponedor</option>
+            <option value="encargado">Encargado</option>
+        </select>
+
+        <select name="sucursal_id" required>
+            {% for s in sucursales %}
+            <option value="{{ s[0] }}">{{ s[1] }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Crear</button>
+    </form>
+
+    <!-- LISTA DE USUARIOS -->
+    <h2>Lista de Usuarios</h2>
+
+    <table class="table table-bordered">
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Rol</th>
+            <th>Sucursal</th>
+            <th>Acciones</th>
+        </tr>
+
+        {% for u in usuarios %}
+        <tr>
+            <td>{{ u[0] }}</td>
+            <td>{{ u[1] }} {{ u[2] }}</td>
+            <td>{{ u[3] }}</td>
+            <td>{{ u[5] }}</td>
+            <td>{{ u[6] }}</td>
+            <td>
+                <button class="btn btn-primary btn-sm"
+                        onclick="abrirModalUsuario({{ u[0] }}, '{{ u[1] }}', '{{ u[2] }}', '{{ u[3] }}', '{{ u[5] }}', {{ u[6] }})">
+                    Editar
+                </button>
+
+                <a href="{{ url_for('eliminar_usuario', id=u[0]) }}"
+                   onclick="return confirm('¿Eliminar usuario?')"
+                   class="btn btn-danger btn-sm">
+                   Eliminar
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</main>
+
+<!-- MODAL USUARIO PARA EDITAR -->
+<div class="modal fade" id="modalEditar" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <form id="formEditar" method="POST">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Usuario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <input type="hidden" name="id" id="edit_id">
+
+                    <label>Nombre:</label>
+                    <input type="text" name="nombre" id="edit_nombre" class="form-control" required>
+
+                    <label>Apellido:</label>
+                    <input type="text" name="apellido" id="edit_apellido" class="form-control" required>
+                    
+                    <label>Email:</label>
+                    <input type="email" name="email" id="edit_email" class="form-control" required>
+
+                    <input type="hidden" name="contrasena" id="edit_contrasena" value="">
+
+
+                    <label>Rol:</label>
+                    <select name="rol" id="edit_rol" class="form-control">
+                        <option value="admi">Admi</option>
+                        <option value="vendedor">Vendedor</option>
+                        <option value="reponedor">Reponedor</option>
+                        <option value="encargado">Encargado</option>
+                    </select>
+
+                    <label>Sucursal:</label>
+                    <select name="sucursal_id" id="edit_sucursal" class="form-control">
+                        {% for s in sucursales %}
+                            <option value="{{ s[0] }}">{{ s[1] }}</option>
+                        {% endfor %}
+                    </select>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../static/js/modal_usuario.js"></script>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedidos</title>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <a href="{{url_for('panel_principal')}}">Home</a>
+            {%if usuarioRol!='vendedor'%}
+                <a href="{{url_for('gestion_inventario')}}">Inventario</a>
+            {%endif%}
+            {%if usuarioRol!='reponedor' and usuarioRol!='vendedor'%}
+            <a href="{{url_for('reportes')}}">Reporte</a>
+            {%endif%}
+            {%if usuarioRol=='admi'%}
+            <a href="{{url_for('gestion_usuario')}}">Usuarios</a>
+            {%endif%}
+            {%if usuarioRol=='vendedor'%}
+            <a href="{{url_for('ventas')}}">Ventas</a>
+            {%endif%}
+        </nav>
+        <div id="user-section">
+            <span>👤 {{ usuarioNombre }} {{usuarioApellido}} - {{usuarioRol}}</span>
+            <a href="{{ url_for('logout') }}" class="boton">Cerrar Sesión</a>
+        </div>
+    </header>
+    <main>
+        {%if usuarioRol =='admi'%}
+            
+        {%endif%}
+        {%if usuarioRol =='encargado'%}
+            
+        {%endif%}
+    </main>
+    <footer>
+        © 2025 Supermercado Jumbox - Todos los derechos reservados.
+    </footer>
+</body>
+
+</html>

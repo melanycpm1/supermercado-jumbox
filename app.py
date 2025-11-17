@@ -29,6 +29,10 @@ if base_de_datos_vacia():
     db.crear_tabla_detalle_venta()
 
     db.agregar_sucursal("Sucursal Central", "Av. Siempre Viva 123", "123456789")
+    db.agregar_sucursal("Sucursal Norte", "Calle Los Álamos 456", "987654321")
+    db.agregar_sucursal("Sucursal Sur", "Av. del Libertador 890", "1122334455")
+    db.agregar_sucursal("Sucursal Este", "Calle Las Rosas 234", "2233445566")
+    db.agregar_sucursal("Sucursal Oeste", "Boulevard San Martín 765", "3344556677")
 
     db.agregar_usuario("Juan", "Pérez", "admi@correo.com", "1234", "admi", 1)
     db.agregar_usuario("Carla", "Rodríguez", "carla.encargada@correo.com", "1234", "encargado", 1)
@@ -94,17 +98,28 @@ def gestion_pedidos():
     if session["rol"] == "vendedor" or session["rol"] == "reponedor":
         return "Acceso denegado. No tenés permisos para entrar acá.", 403 #solo ingresaran los usuarios administradores, encargado
 
-    return  #agregar tamblate
+    return  render_template("pedidos.html")
     
 @app.route("/gestion_usuarios")
 def gestion_usuario():
     if "rol" not in session:
-        return redirect(url_for("login"))  # si no está logueado
-    
+        return redirect(url_for("login"))
+
     if session["rol"] != "admi":
-        return "Acceso denegado. No tenés permisos para entrar acá.", 403 #solo ingresaran los usuarios administradores
-    
-    return #agregar tamblate
+        return "Acceso denegado.", 403
+
+    # Conexión local dentro de la función
+    db = Connexion("database.db")  
+    usuarios = db.mostrar_usuarios()
+    sucursales = db.mostrar_sucursales()
+    db.conexion.close()  # cerrar al final
+
+    return render_template("usuarios.html",
+                            usuarioNombre=session["nombre"],
+                            usuarioApellido=session["apellido"],
+                            usuarioRol=session["rol"],
+                            usuarios=usuarios,
+                            sucursales=sucursales)
 
 @app.route("/reportes")
 def reportes():
@@ -241,6 +256,62 @@ def editar_producto():
     db.conexion.close()
 
     return redirect(url_for("gestion_inventario"))
+
+@app.route('/crear_usuario', methods=['POST'])
+def crear_usuario():
+    nombre = request.form['nombre']
+    apellido = request.form['apellido']
+    email = request.form['email']
+    contrasena = request.form['contrasena']
+    rol = request.form['rol']
+    sucursal_id = request.form['sucursal_id']
+
+    # Crear conexión local dentro de la función
+    db_local = Connexion("database.db")
+    db_local.agregar_usuario(nombre, apellido, email, contrasena, rol, sucursal_id)
+    db_local.conexion.close()  
+
+    return redirect(url_for('gestion_usuario'))
+
+@app.route("/editar_usuario/<int:id>", methods=["POST"])
+def editar_usuario(id):
+    nombre = request.form["nombre"]
+    apellido = request.form["apellido"]
+    email = request.form["email"]
+    contrasena = request.form["contrasena"]  
+    rol = request.form["rol"]
+    sucursal_id = request.form["sucursal_id"]
+
+    # # Crear conexión local dentro de la función para evitar errores
+    db_local = Connexion("database.db")
+
+    if contrasena == "":
+        # No actualizar contraseña
+        db_local.cursor.execute("""
+            UPDATE usuario 
+            SET nombre=?, apellido=?, email=?, rol=?, sucursal_id=?
+            WHERE id=?
+        """, (nombre, apellido, email, rol, sucursal_id, id))
+
+    else:
+        # Actualizar con contraseña 
+        db_local.cursor.execute("""
+            UPDATE usuario 
+            SET nombre=?, apellido=?, email=?, contrasena=?, rol=?, sucursal_id=?
+            WHERE id=?
+        """, (nombre, apellido, email, contrasena, rol, sucursal_id, id))
+
+    db_local.conexion.commit()
+    db_local.conexion.close()
+
+    return redirect(url_for("gestion_usuario"))
+
+@app.route('/eliminar_usuario/<int:id>')
+def eliminar_usuario(id):
+    db_local = Connexion("database.db")  
+    db_local.eliminar_usuario(id)
+    db_local.conexion.close()  
+    return redirect(url_for('gestion_usuario'))
 
 @app.route("/logout")
 def logout():
