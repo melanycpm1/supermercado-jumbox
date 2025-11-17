@@ -1,4 +1,5 @@
 from flask import Flask,render_template,session,url_for, redirect,request;
+import json
 from base_de_datos.mi_conexion import Connexion
 import os
 
@@ -143,13 +144,35 @@ def reportes():
 def ventas():
 
     if "rol" not in session:
-        return redirect(url_for("login"))  # si no está 
-    
-    if session["rol"] != "vendedor":
-        return "Acceso denegado. No tenés permisos para entrar acá.", 403 #solo ingresaran los usuarios administradores
-    
+        return redirect(url_for("login"))
 
-    return  #agregar tamblate
+    if session["rol"] != "vendedor":
+        return "Acceso denegado. No tenés permisos para entrar acá.", 403
+
+    # PRIMERO OBTENGO LA SUCURSAL DEL VENDEDOR
+    id_sucursal = session["sucursal_id"]
+
+    conexion = Connexion("database.db")
+    conexion.cursor.execute("SELECT nombre FROM sucursal WHERE id = ?", (id_sucursal,))
+    nombre_sucursal = conexion.cursor.fetchone()[0]
+
+    productos = db.mostrar_productos_con_stock(id_sucursal)
+
+    vendedor_nombre = f"{session['nombre']} {session['apellido']}"
+
+    conexion.conexion.close()
+
+    return render_template(
+        "ventas.html",
+        usuarioNombre=session["nombre"],
+        usuarioApellido=session["apellido"],
+        usuarioRol=session["rol"],
+        id_sucursal=id_sucursal,
+        nombre_sucursal=nombre_sucursal,
+        productos=productos,
+        vendedor=vendedor_nombre
+    )
+
 
 ####
 
@@ -305,6 +328,45 @@ def editar_usuario(id):
     db_local.conexion.close()
 
     return redirect(url_for("gestion_usuario"))
+
+
+@app.route("/registrar_venta", methods=["POST"])
+def registrar_venta():
+    id_sucursal = request.form["id_sucursal"]
+    id_usuario = request.form["id_usuario"]
+    fecha = request.form["fecha"]
+    metodo = request.form["metodo_pago"]
+    estado = request.form["estado"]
+
+    detalle_json = json.loads(request.form["detalle_json"])
+
+    # calcular total desde el detalle
+    total = sum(item["subtotal"] for item in detalle_json)
+
+    # crear venta
+    id_venta = db.agregar_venta(id_sucursal, id_usuario, fecha, total, metodo, estado)
+
+    # insertar cada detalle y actualizar stock
+    for item in detalle_json:
+        db.agregar_detalle_venta(
+            id_venta,
+            item["id_producto"],
+            item["cantidad"],
+            item["precio_unit"],
+            item["subtotal"]
+        )
+
+        # RESTAR STOCK
+        db.cursor.execute("""
+    UPDATE inventario
+    SET cantidad_actual = cantidad_actual - ?
+    WHERE id_producto = ? AND id_sucursal = ?
+""", (item["cantidad"], item["id_producto"], id_sucursal))
+
+        db.conexion.commit()
+
+    return redirect("/ventas")
+
 
 @app.route('/eliminar_usuario/<int:id>')
 def eliminar_usuario(id):

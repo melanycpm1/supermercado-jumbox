@@ -2,7 +2,8 @@ import sqlite3
 
 class Connexion:
     def __init__(self, nombre_bd):
-        self.conexion = sqlite3.connect(nombre_bd)
+        #self.conexion = sqlite3.connect(nombre_bd)
+        self.conexion = sqlite3.connect(nombre_bd, check_same_thread=False)
         self.cursor = self.conexion.cursor()
 
         #IMPORTANTE: activa las claves foráneas
@@ -121,6 +122,27 @@ class Connexion:
         self.cursor.execute("DELETE FROM producto WHERE id=?", (id,))
         self.conexion.commit()
 
+    def mostrar_productos(self):
+        self.cursor.execute("""
+            SELECT id, nombre, categoria, precio, stock_minimo
+            FROM producto
+        """)
+        return self.cursor.fetchall()
+    
+    def mostrar_productos_con_stock(self, id_sucursal):
+        self.cursor.execute("""
+            SELECT 
+                p.id,
+                p.nombre,
+                p.categoria,
+                p.precio,
+                p.stock_minimo,
+                COALESCE(i.cantidad_actual, 0) AS stock
+            FROM producto p
+            LEFT JOIN inventario i 
+                ON p.id = i.id_producto AND i.id_sucursal = ?
+        """, (id_sucursal,))
+        return self.cursor.fetchall()
 
     #                     TABLA INVENTARIO
 

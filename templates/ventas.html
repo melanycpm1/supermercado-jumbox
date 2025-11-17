@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ventas</title>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <a href="{{url_for('panel_principal')}}">Home</a>
+            {% if usuarioRol!='vendedor' and usuarioRol!='reponedor' %}
+                <a href="{{url_for('gestion_pedidos')}}">Pedido</a>
+            {% endif %}
+            {%if usuarioRol!='vendedor'%}
+                <a href="{{url_for('gestion_inventario')}}">Inventario</a>
+            {%endif%}
+            {%if usuarioRol!='reponedor' and usuarioRol!='vendedor'%}
+            <a href="{{url_for('reportes')}}">Reporte</a>
+            {%endif%}
+            {%if usuarioRol=='admi'%}
+            <a href="{{url_for('gestion_usuario')}}">Usuarios</a>
+            {%endif%}
+        </nav>
+        <div id="user-section">
+            <span>👤 {{ usuarioNombre }} {{usuarioApellido}} - {{usuarioRol}}</span>
+            <a href="{{ url_for('logout') }}" class="boton">Cerrar Sesión</a>
+        </div>
+    </header>
+    <main>
+
+            <h2>Registrar Venta</h2>
+
+            <form id="formVenta" method="POST" action="/registrar_venta">
+
+                <label>Sucursal:</label>
+            <input type="text" value="{{ nombre_sucursal }}" disabled>
+
+            <input type="hidden" name="id_sucursal" value="{{ id_sucursal }}">
+
+                <br><br>
+
+                <!-- ID del usuario vendedor -->
+                <label>Vendedor:</label>
+                    <input type="text" value="{{ vendedor }}" disabled>
+                <br><br>
+                <input type="hidden" name="id_usuario" value="{{ session['usuario_id'] }}">
+
+                <label>Fecha:</label>
+                <input type="date" name="fecha" required>
+
+                <br><br>
+
+                <label>Método de pago:</label>
+                <select name="metodo_pago" required>
+                    <option value="efectivo">Efectivo</option>
+                    <option value="tarjeta">Tarjeta</option>
+                    <option value="mercado_pago">Mercado Pago</option>
+                </select>
+
+                <br><br>
+
+                <label>Estado:</label>
+                <select name="estado" required>
+                    <option value="Pagado">Pagado</option>
+                    <option value="Pendiente">Pendiente</option>
+                </select>
+
+                <hr>
+
+                <h3>Agregar productos</h3>
+
+                <label>Producto:</label>
+                <select id="productoSelect">
+                    {% for p in productos %}
+                    <option value="{{ p[0] }}" data-precio="{{ p[3] }}" data-stock="{{ p[5] }}">
+                    {{ p[1] }} - ${{ p[3] }} (Stock: {{ p[5] }})
+                    </option>
+                    {% endfor %}
+                </select>
+
+                <br><br>
+
+                <label>Cantidad:</label>
+                <input type="number" id="cantidadInput" min="1" value="1">
+
+                <br><br>
+
+                <button type="button" onclick="agregarProducto()">Agregar</button>
+
+                <h3>Detalle de la venta</h3>
+
+                <table border="1" cellpadding="5">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Cant.</th>
+                            <th>Precio</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaDetalle"></tbody>
+                </table>
+
+                <br>
+
+                <h3>Total: $<span id="totalSpan">0</span></h3>
+
+                <!-- enviará el JSON de productos vendidos -->
+                <input type="hidden" name="detalle_json" id="detalle_json">
+
+                <button type="submit">Registrar Venta</button>
+            </form>
+
+    </main>
+    <footer>
+
+    </footer>
+    <script src="../static/js/venta.js"></script>
+</body>
+
+</html>
