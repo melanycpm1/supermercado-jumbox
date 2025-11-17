@@ -8,7 +8,7 @@
 <body>
     <header>
         <nav>
-            {%if usuarioRol=='vendedor'%}
+            {%if usuarioRol!='vendedor'%}
                 <a href="{{url_for('gestion_inventario')}}">Inventario</a>
             {%endif%}
             {%if usuarioRol!='vendedor' and usuarioRol!='reponedor'%}
@@ -25,7 +25,7 @@
             {%endif%}
         </nav>
         <div id="user-section">
-            <span>👤 {{ usuarioNombre }} {{usuarioApellido}} {{usuarioRol}}</span>
+            <span>👤 {{ usuarioNombre }} {{usuarioApellido}} - {{usuarioRol}}</span>
             <a href="{{ url_for('logout') }}" class="boton">Cerrar Sesión</a>
         </div>
     </header>

@@ -12,7 +12,7 @@ db = Connexion(DB_NAME)
 def base_de_datos_vacia():
     tablas = db.cursor.execute(
         "SELECT name FROM sqlite_master WHERE type='table';"
-    ).fetchall()
+    ).fetchall()    
     return len(tablas) == 0
 
 if base_de_datos_vacia():
@@ -57,7 +57,34 @@ def gestion_inventario():
     if session["rol"] == "vendedor":
         return "Acceso denegado. No tenés permisos para entrar acá.", 403 #solo ingresaran los usuarios administradores,encargado,reponedor
     
-    return #agregar tamblate
+    id_sucursal = session.get("sucursal_id")
+    if not id_sucursal:
+        db.conexion.close()
+        return redirect(url_for("home"))
+    db = Connexion("database.db")
+    db.cursor.execute("""
+    SELECT producto.nombre,
+            producto.categoria,
+            producto.precio,
+            producto.stock_minimo,
+            inventario.cantidad_actual,
+            producto.id
+    FROM producto
+    INNER JOIN inventario ON producto.id = inventario.id_producto
+    WHERE inventario.id_sucursal = ?
+""", (id_sucursal,))
+    
+    productos = db.cursor.fetchall()
+    print("Productos encontrados:", productos) 
+
+
+    
+    return render_template("inventario.html",
+                            usuarioNombre=session["nombre"], 
+                            usuarioApellido=session["apellido"], 
+                            usuarioRol=session["rol"],
+                            productos=productos)
+
 
 @app.route("/gestion_pedidos")
 def gestion_pedidos():
@@ -97,8 +124,8 @@ def reportes():
         
     # return render_template
 
-@app.route("/venta")
-def venta():
+@app.route("/ventas")
+def ventas():
 
     if "rol" not in session:
         return redirect(url_for("login"))  # si no está 
@@ -134,6 +161,87 @@ def mostrar_login():
     else:
         return "Email o contraseña incorrectos"
     
+
+@app.route("/agregar_producto", methods=["POST"])
+def agregar_producto():
+    if "rol" not in session:
+        return redirect(url_for("home"))
+
+    id_sucursal = session.get("sucursal_id")
+    if not id_sucursal:
+        return redirect(url_for("home"))
+
+    #Obtener datos del formulario 
+    nombre = request.form["nombre_producto"]
+    categoria = request.form["categoria"]
+    precio = request.form["precio"]
+    stock_minimo = request.form["stock_minimo"]
+    cantidad_actual = request.form["cantidad_actual"]
+
+    # Guardar en la base 
+    db = Connexion("database.db")
+    db.agregar_producto(nombre, categoria, precio, stock_minimo)
+
+    # Obtener el id del último producto insertado
+    id_producto = db.cursor.lastrowid
+
+    # Agregarlo al inventario de esa sucursal
+    db.agregar_inventario(id_sucursal, id_producto, cantidad_actual)
+
+    db.conexion.close()
+
+    # Volver a la página principal del inventario
+    return redirect(url_for("gestion_inventario"))
+    
+@app.route("/eliminar_producto", methods=["POST"])
+def eliminar_producto():
+    id_producto = request.form["id_producto"]
+    db = Connexion("database.db")
+    db.eliminar_producto_y_inventario(id_producto)
+    db.cerrar()
+    return redirect(url_for("gestion_inventario"))
+
+@app.route("/actualizar_inventario", methods=["POST"])
+def actualizar_inventario():
+    id_producto = request.form.get("id_producto")
+    nueva_cantidad = int(request.form.get("cantidad_actual"))
+    cantidad_actual = int(request.form.get("cantidad_previa"))  # vas a enviar este dato también
+
+    #No permitir que se reduzca la cantidad
+    if nueva_cantidad < cantidad_actual:
+        return "No podés cargar una cantidad menor a la actual", 400
+
+    db = Connexion("database.db")
+    db.cursor.execute("""
+        UPDATE inventario 
+        SET cantidad_actual = ?
+        WHERE id_producto = ?
+    """, (nueva_cantidad, id_producto))
+    db.conexion.commit()
+
+    return redirect(url_for("gestion_inventario"))
+
+@app.route("/editar_producto", methods=["POST"])
+def editar_producto():
+    id_producto = request.form["id"]
+    nombre = request.form["nombre"]
+    categoria = request.form["categoria"]
+    precio = request.form["precio"]
+    stock_minimo = request.form["stock_minimo"]
+
+    db = Connexion("database.db")
+
+    db.cursor.execute("""
+        UPDATE producto
+        SET nombre = ?, categoria = ?, precio = ?, stock_minimo = ?
+        WHERE id = ?
+    """, (nombre, categoria, precio, stock_minimo, id_producto))
+
+    db.conexion.commit()
+    db.conexion.close()
+
+    return redirect(url_for("gestion_inventario"))
+
 @app.route("/logout")
 def logout():
     session.clear()
