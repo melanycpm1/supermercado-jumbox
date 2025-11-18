@@ -5,70 +5,91 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pedidos</title>
+
+    <!-- BOOTSTRAP -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
-<body>
-    <header>
-        <nav>
-            <a href="{{url_for('panel_principal')}}">Home</a>
+<body class="bg-light">
+
+    <header class="bg-primary text-white p-3 d-flex justify-content-between align-items-center">
+        <nav class="d-flex gap-3">
+            <a class="text-white text-decoration-none fw-semibold" href="{{url_for('panel_principal')}}">Home</a>
+
             {%if usuarioRol!='vendedor'%}
-            <a href="{{url_for('gestion_inventario')}}">Inventario</a>
+            <a class="text-white text-decoration-none fw-semibold" href="{{url_for('gestion_inventario')}}">Inventario</a>
             {%endif%}
+
             {%if usuarioRol!='reponedor' and usuarioRol!='vendedor'%}
-            <a href="{{url_for('reportes')}}">Reporte</a>
+            <a class="text-white text-decoration-none fw-semibold" href="{{url_for('reportes')}}">Reporte</a>
             {%endif%}
+
             {%if usuarioRol=='admi'%}
-            <a href="{{url_for('gestion_usuario')}}">Usuarios</a>
+            <a class="text-white text-decoration-none fw-semibold" href="{{url_for('gestion_usuario')}}">Usuarios</a>
             {%endif%}
+
             {%if usuarioRol=='vendedor'%}
-            <a href="{{url_for('ventas')}}">Ventas</a>
+            <a class="text-white text-decoration-none fw-semibold" href="{{url_for('ventas')}}">Ventas</a>
             {%endif%}
         </nav>
-        <div id="user-section">
-            <span>👤 {{ usuarioNombre }} {{usuarioApellido}} - {{usuarioRol}}</span>
-            <a href="{{ url_for('logout') }}" class="boton">Cerrar Sesión</a>
+
+        <div id="user-section" class="d-flex align-items-center gap-3">
+            <span class="fw-bold">👤 {{ usuarioNombre }} {{usuarioApellido}} - {{usuarioRol}}</span>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
         </div>
     </header>
-    <main>
 
-        <h1>Gestión de Pedidos</h1>
+    <main class="container py-4">
+
+        <h1 class="mb-4 fw-bold">Gestión de Pedidos</h1>
 
         {% if rol == "encargado" %}
-        <h2>Generar Pedido</h2>
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
 
-        <form action="{{ url_for('generar_pedido') }}" method="POST">
+                <h2 class="h4 mb-3">Generar Pedido</h2>
 
-            <label>Enviar pedido a:</label>
-            <select name="id_sucursal_destino" required>
-                {% for s in sucursales %}
-                {% if s[0] != session["id_sucursal"] %}
-                <option value="{{ s[0] }}">{{ s[1] }}</option>
-                {% endif %}
-                {% endfor %}
-            </select>
+                <form action="{{ url_for('generar_pedido') }}" method="POST" class="mb-3">
 
-            <h3>Productos con stock bajo</h3>
+                    <label class="form-label">Enviar pedido a:</label>
+                    <select name="id_sucursal_destino" required class="form-select mb-3">
+                        {% for s in sucursales %}
+                        {% if s[0] != session["id_sucursal"] %}
+                        <option value="{{ s[0] }}">{{ s[1] }}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
 
-            <ul>
-                {% for p in productos_bajos %}
-                <li>
-                    {{ p[1] }} (Stock actual: {{ p[5] }} / Mínimo: {{ p[4] }})
-                    <input type="number" min="1" placeholder="Cantidad" class="cantidad-input" data-id="{{ p[0] }}">
-                </li>
-                {% endfor %}
-            </ul>
+                    <h3 class="h5 mt-4">Productos con stock bajo</h3>
 
-            <input type="hidden" name="detalle_json" id="detalle_json">
+                    <ul class="list-group mb-3">
+                        {% for p in productos_bajos %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>
+                                {{ p[1] }} (Stock actual: {{ p[5] }} / Mínimo: {{ p[4] }})
+                            </span>
+                            <input type="number" min="1" placeholder="Cantidad"
+                                   class="form-control cantidad-input"
+                                   style="width:120px;" data-id="{{ p[0] }}">
+                        </li>
+                        {% endfor %}
+                    </ul>
 
-            <button type="submit">Generar Pedido</button>
-        </form>
+                    <input type="hidden" name="detalle_json" id="detalle_json">
+
+                    <button type="submit" class="btn btn-primary">Generar Pedido</button>
+                </form>
+
+            </div>
+        </div>
         {% endif %}
 
-        <hr>
+        <hr class="my-4">
 
-        <h2>Pedidos Generados</h2>
-        <table border="1">
-            <tr>
+        <h2 class="h4 mb-3">Pedidos Generados</h2>
+
+        <table class="table table-bordered table-striped">
+            <tr class="table-dark">
                 <th>ID</th>
                 <th>Origen</th>
                 <th>Destino</th>
@@ -87,9 +108,10 @@
             {% endfor %}
         </table>
 
-        <h2>Pedidos Recibidos</h2>
-        <table border="1">
-            <tr>
+        <h2 class="h4 mt-5 mb-3">Pedidos Recibidos</h2>
+
+        <table class="table table-bordered table-striped">
+            <tr class="table-dark">
                 <th>ID</th>
                 <th>Origen</th>
                 <th>Destino</th>
@@ -107,24 +129,35 @@
                 <td>{{ p[2] }}</td>
                 <td>{{ p[3] }}</td>
                 <td>{{ p[4] }}</td>
+
                 {% if rol == "encargado"%}
                 <td>
                     {% if rol == "encargado" and p[4] == "pendiente" %}
-                    <a href="{{ url_for('actualizar_estado_pedido', id_pedido=p[0], accion='aprobar') }}">Aprobar</a>
-                    <a href="{{ url_for('actualizar_estado_pedido', id_pedido=p[0], accion='rechazar') }}">Rechazar</a>
+                        <a href="{{ url_for('actualizar_estado_pedido', id_pedido=p[0], accion='aprobar') }}"
+                           class="btn btn-success btn-sm">Aprobar</a>
+
+                        <a href="{{ url_for('actualizar_estado_pedido', id_pedido=p[0], accion='rechazar') }}"
+                           class="btn btn-danger btn-sm">Rechazar</a>
                     {% endif %}
+
                     {% if rol == "encargado" and p[4] == "rechazado" or p[4]=="aprobado"%}
-                    Accion realizada
+                        <span class="text-muted">Acción realizada</span>
                     {% endif %}
                 </td>
                 {% endif %}
             </tr>
             {% endfor %}
+        </table>
+
     </main>
-    <footer>
+
+    <footer class="bg-primary text-white text-center p-3 mt-4">
         © 2025 Supermercado Jumbox - Todos los derechos reservados.
     </footer>
+
     <script src="../static/js/pedidos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 
 </html>

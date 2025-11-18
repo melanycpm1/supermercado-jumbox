@@ -5,120 +5,114 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ventas</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
-<body>
-    <header>
-        <nav>
-            <a href="{{url_for('panel_principal')}}">Home</a>
+<body class="bg-light">
+
+    <header class="bg-primary text-white p-3 d-flex justify-content-between align-items-center">
+        <nav class="d-flex gap-3">
+            <a class="text-white fw-semibold text-decoration-none" href="{{url_for('panel_principal')}}">Home</a>
             {% if usuarioRol!='vendedor' and usuarioRol!='reponedor' %}
-                <a href="{{url_for('gestion_pedidos')}}">Pedido</a>
+                <a class="text-white fw-semibold text-decoration-none" href="{{url_for('gestion_pedidos')}}">Pedido</a>
             {% endif %}
             {%if usuarioRol!='vendedor'%}
-                <a href="{{url_for('gestion_inventario')}}">Inventario</a>
+                <a class="text-white fw-semibold text-decoration-none" href="{{url_for('gestion_inventario')}}">Inventario</a>
             {%endif%}
             {%if usuarioRol!='reponedor' and usuarioRol!='vendedor'%}
-            <a href="{{url_for('reportes')}}">Reporte</a>
+            <a class="text-white fw-semibold text-decoration-none" href="{{url_for('reportes')}}">Reporte</a>
             {%endif%}
             {%if usuarioRol=='admi'%}
-            <a href="{{url_for('gestion_usuario')}}">Usuarios</a>
+            <a class="text-white fw-semibold text-decoration-none" href="{{url_for('gestion_usuario')}}">Usuarios</a>
             {%endif%}
         </nav>
-        <div id="user-section">
+
+        <div id="user-section" class="d-flex align-items-center gap-3">
             <span>👤 {{ usuarioNombre }} {{usuarioApellido}} - {{usuarioRol}}</span>
-            <a href="{{ url_for('logout') }}" class="boton">Cerrar Sesión</a>
+            <a href="{{ url_for('logout') }}" class="btn btn-danger btn-sm">Cerrar Sesión</a>
         </div>
     </header>
-    <main>
 
-            <h2>Registrar Venta</h2>
+    <main class="container py-4">
 
-            <form id="formVenta" method="POST" action="/registrar_venta">
+        <h2 class="mb-4">Registrar Venta</h2>
 
-                <label>Sucursal:</label>
-            <input type="text" value="{{ nombre_sucursal }}" disabled>
+        <form id="formVenta" method="POST" action="/registrar_venta" class="bg-white p-4 rounded shadow-sm">
+
+            <label class="form-label">Sucursal:</label>
+            <input type="text" class="form-control mb-3" value="{{ nombre_sucursal }}" disabled>
 
             <input type="hidden" name="id_sucursal" value="{{ id_sucursal }}">
 
-                <br><br>
+            <!-- ID del usuario vendedor -->
+            <label class="form-label">Vendedor:</label>
+            <input type="text" class="form-control mb-3" value="{{ vendedor }}" disabled>
 
-                <!-- ID del usuario vendedor -->
-                <label>Vendedor:</label>
-                    <input type="text" value="{{ vendedor }}" disabled>
-                <br><br>
-                <input type="hidden" name="id_usuario" value="{{ session['usuario_id'] }}">
+            <input type="hidden" name="id_usuario" value="{{ session['usuario_id'] }}">
 
-                <label>Fecha:</label>
-                <input type="date" name="fecha" required>
+            <label class="form-label">Fecha:</label>
+            <input type="date" name="fecha" required class="form-control mb-3">
 
-                <br><br>
+            <label class="form-label">Método de pago:</label>
+            <select name="metodo_pago" required class="form-select mb-3">
+                <option value="efectivo">Efectivo</option>
+                <option value="tarjeta">Tarjeta</option>
+                <option value="mercado_pago">Mercado Pago</option>
+            </select>
 
-                <label>Método de pago:</label>
-                <select name="metodo_pago" required>
-                    <option value="efectivo">Efectivo</option>
-                    <option value="tarjeta">Tarjeta</option>
-                    <option value="mercado_pago">Mercado Pago</option>
-                </select>
+            <label class="form-label">Estado:</label>
+            <select name="estado" required class="form-select mb-4">
+                <option value="Pagado">Pagado</option>
+                <option value="Pendiente">Pendiente</option>
+            </select>
 
-                <br><br>
+            <hr>
 
-                <label>Estado:</label>
-                <select name="estado" required>
-                    <option value="Pagado">Pagado</option>
-                    <option value="Pendiente">Pendiente</option>
-                </select>
+            <h3 class="mt-4">Agregar productos</h3>
 
-                <hr>
-
-                <h3>Agregar productos</h3>
-
-                <label>Producto:</label>
-                <select id="productoSelect">
-                    {% for p in productos %}
-                    <option value="{{ p[0] }}" data-precio="{{ p[3] }}" data-stock="{{ p[5] }}">
+            <label class="form-label mt-3">Producto:</label>
+            <select id="productoSelect" class="form-select mb-3">
+                {% for p in productos %}
+                <option value="{{ p[0] }}" data-precio="{{ p[3] }}" data-stock="{{ p[5] }}">
                     {{ p[1] }} - ${{ p[3] }} (Stock: {{ p[5] }})
-                    </option>
-                    {% endfor %}
-                </select>
+                </option>
+                {% endfor %}
+            </select>
 
-                <br><br>
+            <label class="form-label">Cantidad:</label>
+            <input type="number" id="cantidadInput" min="1" value="1" class="form-control mb-3">
 
-                <label>Cantidad:</label>
-                <input type="number" id="cantidadInput" min="1" value="1">
+            <button type="button" onclick="agregarProducto()" class="btn btn-success mb-4">Agregar</button>
 
-                <br><br>
+            <h3>Detalle de la venta</h3>
 
-                <button type="button" onclick="agregarProducto()">Agregar</button>
+            <table class="table table-bordered mt-3">
+                <thead class="table-light">
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cant.</th>
+                        <th>Precio</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaDetalle"></tbody>
+            </table>
 
-                <h3>Detalle de la venta</h3>
+            <h3 class="mt-3">Total: $<span id="totalSpan">0</span></h3>
 
-                <table border="1" cellpadding="5">
-                    <thead>
-                        <tr>
-                            <th>Producto</th>
-                            <th>Cant.</th>
-                            <th>Precio</th>
-                            <th>Subtotal</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaDetalle"></tbody>
-                </table>
+            <input type="hidden" name="detalle_json" id="detalle_json">
 
-                <br>
-
-                <h3>Total: $<span id="totalSpan">0</span></h3>
-
-                <!-- enviará el JSON de productos vendidos -->
-                <input type="hidden" name="detalle_json" id="detalle_json">
-
-                <button type="submit">Registrar Venta</button>
-            </form>
+            <button type="submit" class="btn btn-primary w-100 mt-3">Registrar Venta</button>
+        </form>
 
     </main>
-    <footer>
 
-    </footer>
+    <footer class="text-center py-3 mt-4 bg-white border-top"></footer>
+
     <script src="../static/js/venta.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

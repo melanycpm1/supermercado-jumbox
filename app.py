@@ -3,7 +3,7 @@ import json
 from base_de_datos.mi_conexion import Connexion
 import os
 from datetime import datetime
-
+import sqlite3
 app = Flask(__name__)
 app.secret_key = "clave_super_segura"
 
@@ -83,13 +83,21 @@ def gestion_inventario():
     productos = db.cursor.fetchall()
     print("Productos encontrados:", productos) 
 
+    alertas = []
+    for p in productos:
+        if p[4] <= p[3]:  # cantidad_actual <= stock_minimo
+            alertas.append({
+                "nombre": p[0],
+                "actual": p[4],
+                "stock_min": p[3]
+            })
 
-    
     return render_template("inventario.html",
                             usuarioNombre=session["nombre"], 
                             usuarioApellido=session["apellido"], 
                             usuarioRol=session["rol"],
-                            productos=productos)
+                            productos=productos,
+                            alertas=alertas)
 
 
 
@@ -132,7 +140,7 @@ def gestion_pedidos():
 
     return render_template(
         "pedidos.html",
-        suarioNombre=session["nombre"], 
+        usuarioNombre=session["nombre"], 
         usuarioApellido=session["apellido"], 
         usuarioRol=session["rol"],
         rol=rol,
@@ -170,16 +178,79 @@ def reportes():
     
     if session["rol"] == "reponedor" or session["rol"] == "vendedor":
         return "Acceso denegado. No tenés permisos para entrar acá.", 403
+    
+    fecha_inicio = request.args.get("fecha_inicio", "").strip()
+    fecha_fin = request.args.get("fecha_fin", "").strip()
+    sucursal_raw = request.args.get("sucursal", "").strip()   
+
+    # --- cargar sucursales para el select
+    db.cursor.execute("SELECT id, nombre FROM sucursal")
+    sucursales = db.cursor.fetchall()
+
+    # --- convertir sucursal a int si corresponde, sino None
+    selected_sucursal = None
+    if sucursal_raw != "":
+        try:
+            selected_sucursal = int(sucursal_raw)
+        except ValueError:
+            selected_sucursal = None
+    def validar_fecha(s):
+        if not s:
+            return None
+        try:
+            dt = datetime.strptime(s, "%Y-%m-%d")
+            return dt.strftime("%Y-%m-%d")   # aseguramos formato
+        except Exception:
+            return None
+
+    f_inicio = validar_fecha(fecha_inicio)
+    f_fin = validar_fecha(fecha_fin)
+
+    # query
+    query = """
+        SELECT p.nombre, p.categoria, SUM(dv.cantidad) AS cantidad
+        FROM detalle_venta dv
+        JOIN venta v ON dv.id_venta = v.id_venta
+        JOIN producto p ON dv.id_producto = p.id
+        WHERE 1=1
+    """
+    params = []
+
+    if f_inicio:
+        query += " AND date(v.fecha) >= date(?)"
+        params.append(f_inicio)
+    if f_fin:
+        query += " AND date(v.fecha) <= date(?)"
+        params.append(f_fin)
+    if selected_sucursal is not None:
+        query += " AND v.id_sucursal = ?"
+        params.append(selected_sucursal)
+
+    query += " GROUP BY p.id ORDER BY cantidad DESC"
+
+    # ---ver qué consulta y params se ejecutan
+    print("reportes -> args:", dict(request.args))
+    print("QUERY:", query)
+    print("PARAMS:", params)
+
+    db.cursor.execute(query, params)
+    reportes = db.cursor.fetchall()
+
+    print("Reporte con filtros:", reportes)
+
+    return render_template(
+        "reportes.html",
+        usuarioNombre=session["nombre"],
+        usuarioApellido=session["apellido"],
+        usuarioRol=session["rol"],
+        reportes=reportes,
+        sucursales=sucursales,
+        selected_sucursal=selected_sucursal,
+        fecha_inicio=f_inicio or "",
+        fecha_fin=f_fin or ""
+    )
 
 
-    return  #agregar tamblate
-
-#@app.route("/notificaciones")
-#def notificaciones():
-    #  if "rol" not in session:
-    #     return redirect(url_for("login"))  # si no está logueado
-        
-    # return render_template
 
 @app.route("/ventas")
 def ventas():

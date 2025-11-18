@@ -10,63 +10,64 @@
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
 </head>
 
-<body>
+<body class="bg-light">
 
-<header>
-    <nav>
-        <a href="{{url_for('panel_principal')}}">Home</a>
+<header class="bg-primary text-white p-3 d-flex justify-content-between align-items-center">
+    <nav class="d-flex gap-3">
+        <a class="text-white text-decoration-none fw-semibold" href="{{url_for('panel_principal')}}">Home</a>
         {% if usuarioRol!='vendedor' %}
-        <a href="{{url_for('gestion_inventario')}}">Inventario</a>
+        <a class="text-white text-decoration-none fw-semibold" href="{{url_for('gestion_inventario')}}">Inventario</a>
         {% endif %}
         {% if usuarioRol!='vendedor' and usuarioRol!='reponedor' %}
-        <a href="{{url_for('gestion_pedidos')}}">Pedido</a>
+        <a class="text-white text-decoration-none fw-semibold" href="{{url_for('gestion_pedidos')}}">Pedido</a>
         {% endif %}
         {% if usuarioRol!='reponedor' and usuarioRol!='vendedor' %}
-        <a href="{{url_for('reportes')}}">Reporte</a>
+        <a class="text-white text-decoration-none fw-semibold" href="{{url_for('reportes')}}">Reporte</a>
         {% endif %}
         {% if usuarioRol=='vendedor' %}
-        <a href="{{url_for('ventas')}}">Ventas</a>
+        <a class="text-white text-decoration-none fw-semibold" href="{{url_for('ventas')}}">Ventas</a>
         {% endif %}
     </nav>
-    <div id="user-section">
-        <span>👤 {{ usuarioNombre }} {{usuarioApellido}} - {{usuarioRol}}</span>
-        <a href="{{ url_for('logout') }}" class="boton">Cerrar Sesión</a>
+    <div id="user-section" class="d-flex gap-3 align-items-center">
+        <span class="fw-bold">👤 {{ usuarioNombre }} {{usuarioApellido}} - {{usuarioRol}}</span>
+        <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
     </div>
 </header>
 
 <main class="container mt-4">
 
-    <h1>Gestión de Usuarios</h1>
+    <h1 class="fw-bold mb-4">Gestión de Usuarios</h1>
 
     <!-- CREAR USUARIO -->
-    <h2>Crear usuario</h2>
-    <form action="{{ url_for('crear_usuario') }}" method="POST" class="mb-4">
-        <input type="text" name="nombre" placeholder="Nombre" required>
-        <input type="text" name="apellido" placeholder="Apellido" required>
-        <input type="email" name="email" placeholder="Email" required>
-        <input type="password" name="contrasena" placeholder="Contraseña" required>
+    <h2 class="h4">Crear usuario</h2>
+    <form action="{{ url_for('crear_usuario') }}" method="POST" class="mb-4 p-3 border rounded bg-white">
 
-        <select name="rol" required>
+        <input type="text" name="nombre" placeholder="Nombre" required class="form-control mb-2">
+        <input type="text" name="apellido" placeholder="Apellido" required class="form-control mb-2">
+        <input type="email" name="email" placeholder="Email" required class="form-control mb-2">
+        <input type="password" name="contrasena" placeholder="Contraseña" required class="form-control mb-3">
+
+        <select name="rol" required class="form-select mb-2">
             <option value="admi">Admi</option>
             <option value="vendedor">Vendedor</option>
             <option value="reponedor">Reponedor</option>
             <option value="encargado">Encargado</option>
         </select>
 
-        <select name="sucursal_id" required>
+        <select name="sucursal_id" required class="form-select mb-3">
             {% for s in sucursales %}
             <option value="{{ s[0] }}">{{ s[1] }}</option>
             {% endfor %}
         </select>
 
-        <button type="submit">Crear</button>
+        <button type="submit" class="btn btn-primary w-100">Crear</button>
     </form>
 
     <!-- LISTA DE USUARIOS -->
-    <h2>Lista de Usuarios</h2>
+    <h2 class="h4">Lista de Usuarios</h2>
 
-    <table class="table table-bordered">
-        <tr>
+    <table class="table table-bordered table-striped bg-white">
+        <tr class="table-dark">
             <th>ID</th>
             <th>Nombre</th>
             <th>Email</th>
@@ -82,8 +83,8 @@
             <td>{{ u[3] }}</td>
             <td>{{ u[5] }}</td>
             <td>{{ u[6] }}</td>
-            <td>
-                <button class="btn btn-primary btn-sm"
+            <td class="text-center">
+                <button class="btn btn-primary btn-sm mb-1"
                         onclick="abrirModalUsuario({{ u[0] }}, '{{ u[1] }}', '{{ u[2] }}', '{{ u[3] }}', '{{ u[5] }}', {{ u[6] }})">
                     Editar
                 </button>
@@ -106,7 +107,7 @@
 
             <form id="formEditar" method="POST">
 
-                <div class="modal-header">
+                <div class="modal-header bg-dark text-white">
                     <h5 class="modal-title">Editar Usuario</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -116,19 +117,18 @@
                     <input type="hidden" name="id" id="edit_id">
 
                     <label>Nombre:</label>
-                    <input type="text" name="nombre" id="edit_nombre" class="form-control" required>
+                    <input type="text" name="nombre" id="edit_nombre" class="form-control mb-2" required>
 
                     <label>Apellido:</label>
-                    <input type="text" name="apellido" id="edit_apellido" class="form-control" required>
+                    <input type="text" name="apellido" id="edit_apellido" class="form-control mb-2" required>
                     
                     <label>Email:</label>
-                    <input type="email" name="email" id="edit_email" class="form-control" required>
+                    <input type="email" name="email" id="edit_email" class="form-control mb-2" required>
 
                     <input type="hidden" name="contrasena" id="edit_contrasena" value="">
 
-
                     <label>Rol:</label>
-                    <select name="rol" id="edit_rol" class="form-control">
+                    <select name="rol" id="edit_rol" class="form-select mb-2">
                         <option value="admi">Admi</option>
                         <option value="vendedor">Vendedor</option>
                         <option value="reponedor">Reponedor</option>
@@ -136,7 +136,7 @@
                     </select>
 
                     <label>Sucursal:</label>
-                    <select name="sucursal_id" id="edit_sucursal" class="form-control">
+                    <select name="sucursal_id" id="edit_sucursal" class="form-select">
                         {% for s in sucursales %}
                             <option value="{{ s[0] }}">{{ s[1] }}</option>
                         {% endfor %}
@@ -154,6 +154,12 @@
         </div>
     </div>
 </div>
+<footer class="bg-primary text-white text-center p-3 mt-4">
+        © 2025 Supermercado Jumbox - Todos los derechos reservados.
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../static/js/modal_usuario.js"></script>
+
+</body>
+</html>
