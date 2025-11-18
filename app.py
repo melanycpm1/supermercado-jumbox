@@ -2,6 +2,7 @@ from flask import Flask,render_template,session,url_for, redirect,request;
 import json
 from base_de_datos.mi_conexion import Connexion
 import os
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = "clave_super_segura"
@@ -91,16 +92,56 @@ def gestion_inventario():
                             productos=productos)
 
 
+
+
 @app.route("/gestion_pedidos")
 def gestion_pedidos():
-    if "rol" not in session:
-        return redirect(url_for("login"))  # si no está logueado
-    
-    if session["rol"] == "vendedor" or session["rol"] == "reponedor":
-        return "Acceso denegado. No tenés permisos para entrar acá.", 403 #solo ingresaran los usuarios administradores, encargado
+    rol = session["rol"]
+    id_sucursal =  session["sucursal_id"]
 
-    return  render_template("pedidos.html")
-    
+    if rol == "encargado":
+        # pedidos generados por mi sucursal
+        pedidos_generados = db.cursor.execute("""
+            SELECT p.id, s1.nombre, s2.nombre, p.fecha_pedido, p.estado
+            FROM pedido p
+            JOIN sucursal s1 ON p.id_sucursal_origen = s1.id
+            JOIN sucursal s2 ON p.id_sucursal_destino = s2.id
+            WHERE p.id_sucursal_origen = ?
+        """, (id_sucursal,)).fetchall()
+
+        # pedidos recibidos por mi sucursal
+        pedidos_recibidos = db.cursor.execute("""
+            SELECT p.id, s1.nombre, s2.nombre, p.fecha_pedido, p.estado
+            FROM pedido p
+            JOIN sucursal s1 ON p.id_sucursal_origen = s1.id
+            JOIN sucursal s2 ON p.id_sucursal_destino = s2.id
+            WHERE p.id_sucursal_destino = ?
+        """, (id_sucursal,)).fetchall()
+
+        productos_bajos = db.productos_stock_bajo(id_sucursal)
+
+    elif rol == "admi":
+        pedidos_generados = db.mostrar_pedidos()
+        pedidos_recibidos = pedidos_generados
+        productos_bajos = []
+
+    else:
+        return "No autorizado", 403
+
+    sucursales = db.cursor.execute("SELECT id, nombre FROM sucursal").fetchall()
+
+    return render_template(
+        "pedidos.html",
+        suarioNombre=session["nombre"], 
+        usuarioApellido=session["apellido"], 
+        usuarioRol=session["rol"],
+        rol=rol,
+        pedidos_generados=pedidos_generados,
+        pedidos_recibidos=pedidos_recibidos,
+        productos_bajos=productos_bajos,
+        sucursales=sucursales
+    )
+
 @app.route("/gestion_usuarios")
 def gestion_usuario():
     if "rol" not in session:
@@ -374,6 +415,58 @@ def eliminar_usuario(id):
     db_local.eliminar_usuario(id)
     db_local.conexion.close()  
     return redirect(url_for('gestion_usuario'))
+
+@app.route("/generar_pedido", methods=["POST"])
+def generar_pedido():
+    if session["rol"] != "encargado":
+        return "No autorizado", 403
+
+    id_sucursal_origen = session["sucursal_id"]
+    id_sucursal_destino = request.form["id_sucursal_destino"]
+    detalle_json = json.loads(request.form["detalle_json"])
+
+    fecha = datetime.now().strftime("%Y-%m-%d")
+
+    db.agregar_pedido(
+        id_sucursal_origen,
+        id_sucursal_destino,
+        fecha,
+        "pendiente"
+    )
+
+    id_pedido = db.cursor.lastrowid
+
+    for item in detalle_json:
+        db.agregar_detalle_pedido(
+            id_pedido,
+            item["id_producto"],
+            item["cantidad_solicitada"],
+            0
+        )
+
+    return redirect(url_for("gestion_pedidos"))
+
+@app.route("/actualizar_estado_pedido/<int:id_pedido>/<accion>")
+def actualizar_estado_pedido(id_pedido, accion):
+    db_local = Connexion("database.db")
+
+    if accion == "aprobar":
+        nuevo_estado = "aprobado"
+    elif accion == "rechazar":
+        nuevo_estado = "rechazado"
+    else:
+        nuevo_estado = "pendiente"
+
+    db_local.cursor.execute("""
+        UPDATE pedido 
+        SET estado = ?
+        WHERE id = ?
+    """, (nuevo_estado, id_pedido))
+
+    db_local.conexion.commit()
+    db_local.conexion.close()
+
+    return redirect(url_for("gestion_pedidos"))
 
 @app.route("/logout")
 def logout():

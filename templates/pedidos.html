@@ -12,7 +12,7 @@
         <nav>
             <a href="{{url_for('panel_principal')}}">Home</a>
             {%if usuarioRol!='vendedor'%}
-                <a href="{{url_for('gestion_inventario')}}">Inventario</a>
+            <a href="{{url_for('gestion_inventario')}}">Inventario</a>
             {%endif%}
             {%if usuarioRol!='reponedor' and usuarioRol!='vendedor'%}
             <a href="{{url_for('reportes')}}">Reporte</a>
@@ -30,16 +30,101 @@
         </div>
     </header>
     <main>
-        {%if usuarioRol =='admi'%}
-            
-        {%endif%}
-        {%if usuarioRol =='encargado'%}
-            
-        {%endif%}
+
+        <h1>Gestión de Pedidos</h1>
+
+        {% if rol == "encargado" %}
+        <h2>Generar Pedido</h2>
+
+        <form action="{{ url_for('generar_pedido') }}" method="POST">
+
+            <label>Enviar pedido a:</label>
+            <select name="id_sucursal_destino" required>
+                {% for s in sucursales %}
+                {% if s[0] != session["id_sucursal"] %}
+                <option value="{{ s[0] }}">{{ s[1] }}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+
+            <h3>Productos con stock bajo</h3>
+
+            <ul>
+                {% for p in productos_bajos %}
+                <li>
+                    {{ p[1] }} (Stock actual: {{ p[5] }} / Mínimo: {{ p[4] }})
+                    <input type="number" min="1" placeholder="Cantidad" class="cantidad-input" data-id="{{ p[0] }}">
+                </li>
+                {% endfor %}
+            </ul>
+
+            <input type="hidden" name="detalle_json" id="detalle_json">
+
+            <button type="submit">Generar Pedido</button>
+        </form>
+        {% endif %}
+
+        <hr>
+
+        <h2>Pedidos Generados</h2>
+        <table border="1">
+            <tr>
+                <th>ID</th>
+                <th>Origen</th>
+                <th>Destino</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+            </tr>
+
+            {% for p in pedidos_generados %}
+            <tr>
+                <td>{{ p[0] }}</td>
+                <td>{{ p[1] }}</td>
+                <td>{{ p[2] }}</td>
+                <td>{{ p[3] }}</td>
+                <td>{{ p[4] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <h2>Pedidos Recibidos</h2>
+        <table border="1">
+            <tr>
+                <th>ID</th>
+                <th>Origen</th>
+                <th>Destino</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+                {% if rol == "encargado"%}
+                <th>Acción</th>
+                {% endif %}
+            </tr>
+
+            {% for p in pedidos_recibidos %}
+            <tr>
+                <td>{{ p[0] }}</td>
+                <td>{{ p[1] }}</td>
+                <td>{{ p[2] }}</td>
+                <td>{{ p[3] }}</td>
+                <td>{{ p[4] }}</td>
+                {% if rol == "encargado"%}
+                <td>
+                    {% if rol == "encargado" and p[4] == "pendiente" %}
+                    <a href="{{ url_for('actualizar_estado_pedido', id_pedido=p[0], accion='aprobar') }}">Aprobar</a>
+                    <a href="{{ url_for('actualizar_estado_pedido', id_pedido=p[0], accion='rechazar') }}">Rechazar</a>
+                    {% endif %}
+                    {% if rol == "encargado" and p[4] == "rechazado" or p[4]=="aprobado"%}
+                    Accion realizada
+                    {% endif %}
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
     </main>
     <footer>
         © 2025 Supermercado Jumbox - Todos los derechos reservados.
     </footer>
+    <script src="../static/js/pedidos.js"></script>
 </body>
 
 </html>

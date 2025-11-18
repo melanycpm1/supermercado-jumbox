@@ -143,6 +143,22 @@ class Connexion:
                 ON p.id = i.id_producto AND i.id_sucursal = ?
         """, (id_sucursal,))
         return self.cursor.fetchall()
+    def productos_stock_bajo(self, id_sucursal):
+        productos = self.mostrar_productos_con_stock(id_sucursal)
+        productos_bajos = []
+
+        for p in productos:
+            id_prod = p[0]
+            nombre = p[1]
+            categoria = p[2]
+            precio = p[3]
+            minimo = p[4]
+            stock_actual = p[5]
+
+            if stock_actual <= minimo or stock_actual <= minimo + 2:
+                productos_bajos.append(p)
+
+        return productos_bajos
 
     #                     TABLA INVENTARIO
 
