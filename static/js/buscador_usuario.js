@@ -18,3 +18,26 @@ inputBuscarCard.addEventListener('keyup', function() {
 });
 };
 document.addEventListener('DOMContentLoaded', buscadorUsuario);
+
+let ordenAscendente = true;
+
+function ordenarUsuarios(tipo) {
+
+    const contenedor = document.querySelector(".row.g-3");
+    const usuarios = Array.from(document.querySelectorAll(".usuario-card"));
+
+    usuarios.sort((a, b) => {
+
+        let valorA = a.dataset[tipo];
+        let valorB = b.dataset[tipo];
+
+        if (valorA < valorB) return ordenAscendente ? -1 : 1;
+        if (valorA > valorB) return ordenAscendente ? 1 : -1;
+        return 0;
+    });
+
+    ordenAscendente = !ordenAscendente;
+
+    contenedor.innerHTML = "";
+    usuarios.forEach(u => contenedor.appendChild(u));
+}

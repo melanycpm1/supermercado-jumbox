@@ -68,11 +68,20 @@
     </form>
 
     <!-- LISTA DE USUARIOS -->
-    <h2 class="h4">Lista de Usuarios</h2>
-
+    <h2 class="h4">
+    Lista de Usuarios |
+    <span class="text-primary" style="cursor:pointer;" onclick="ordenarUsuarios('nombre')">
+        Nombre ⬍
+    </span> |
+    <span class="text-primary" style="cursor:pointer;" onclick="ordenarUsuarios('sucursal')">
+        Sucursal ⬍
+    </span>
+</h2>
     <div class="row g-3">
     {% for u in usuarios %}
-    <div class="col-md-6 col-lg-4">
+    <div class="col-md-6 col-lg-4 usuario-card"
+     data-nombre="{{ u[1]|lower }} {{ u[2]|lower }}"
+     data-sucursal="{{ u[6]|lower }}">
         <div class="card shadow-sm h-100">
             <div class="card-body">
                 <h5 class="card-title fw-bold">{{ u[1] }} {{ u[2] }}</h5>
