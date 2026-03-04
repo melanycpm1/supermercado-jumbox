@@ -60,3 +60,20 @@ function agregarProducto() {
     document.getElementById("totalSpan").innerText = total;
     document.getElementById("detalle_json").value = JSON.stringify(listaDetalle);
 }
+function limpiarFormulario() {
+    // Vaciar tabla de detalle
+    tablaDetalle.innerHTML = "";
+
+    // Resetear total
+    total = 0;
+    totalSpan.textContent = total.toFixed(2);
+
+    // Ocultar método de pago
+    metodoPagoContainer.style.display = "none";
+
+    // Resetear cantidad a 1
+    document.getElementById('cantidadInput').value = 1;
+
+    // Limpiar detalle_json si lo estás usando
+    document.getElementById('detalle_json').value = "";
+}
