@@ -49,6 +49,13 @@ function agregarProducto() {
             <td>${subtotal}</td>
         </tr>
     `;
+    const formVenta = document.getElementById('formVenta');
+
+    formVenta.addEventListener('submit', function(e) {
+        // Antes de enviar, marcar como pagado automáticamente
+        const estadoInput = document.getElementById('estadoInput');
+        estadoInput.value = 'Pagado';
+    });
 
     document.getElementById("totalSpan").innerText = total;
     document.getElementById("detalle_json").value = JSON.stringify(listaDetalle);
