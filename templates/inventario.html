@@ -111,6 +111,15 @@
     </div>
 </div>
 
+        <div class="d-flex justify-content-end mb-3 gap-2">
+            <button class="btn btn-outline-success btn-sm" onclick="ordenarPrecio('asc')">
+                Precio  ↓
+            </button>
+            <button class="btn btn-outline-danger btn-sm" onclick="ordenarPrecio('desc')">
+                Precio  ↑
+            </button>
+        </div>
+
         <div class="table-responsive">
             <table class="table table-bordered table-striped table-hover">
                 <thead class="table-dark">
@@ -129,7 +138,7 @@
 
                 <tbody>
                     {% for p in productos %}
-                    <tr data-categoria="{{ p[1] }}">
+                    <tr data-categoria="{{ p[1] }}"  data-precio="{{ p[2] }}">
                         <td>{{ p[0] }}</td>
                         <td>{{ p[1] }}</td>
                         <td>${{ p[2] }}</td>

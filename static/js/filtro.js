@@ -40,3 +40,27 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
 });
+
+function ordenarPrecio(tipo) {
+
+    let tbody = document.querySelector("tbody");
+    let filas = Array.from(tbody.querySelectorAll("tr"));
+
+    filas.sort(function(a, b) {
+
+        let precioA = parseFloat(a.getAttribute("data-precio"));
+        let precioB = parseFloat(b.getAttribute("data-precio"));
+
+        if (tipo === "asc") {
+            return precioA - precioB;  // menor a mayor
+        } else {
+            return precioB - precioA;  // mayor a menor
+        }
+    });
+
+    // Vaciar tabla
+    tbody.innerHTML = "";
+
+    // Volver a agregar filas ordenadas
+    filas.forEach(fila => tbody.appendChild(fila));
+}
