@@ -109,6 +109,8 @@ def gestion_pedidos():
 
     if rol == "encargado":
         # pedidos generados por mi sucursal
+        #Selecciona todos los pedidos que su sucursal ha enviado a otras sucursales.
+        #Muestra: id del pedido, nombre de sucursal origen, nombre sucursal destino, fecha del pedido, estado.
         pedidos_generados = db.cursor.execute("""
             SELECT p.id, s1.nombre, s2.nombre, p.fecha_pedido, p.estado
             FROM pedido p
@@ -127,7 +129,8 @@ def gestion_pedidos():
         """, (id_sucursal,)).fetchall()
 
         productos_bajos = db.productos_stock_bajo(id_sucursal)
-
+    #Los administradores pueden ver todos los pedidos, sin importar la sucursal.
+    #No se muestran productos con stock bajo (productos_bajos = []).
     elif rol == "admi":
         pedidos_generados = db.mostrar_pedidos()
         pedidos_recibidos = pedidos_generados
@@ -178,16 +181,19 @@ def reportes():
     
     if session["rol"] == "reponedor" or session["rol"] == "vendedor":
         return "Acceso denegado. No tenés permisos para entrar acá.", 403
+    #Toma los parámetros que vienen en la URL (GET) para filtrar el reporte:
     
     fecha_inicio = request.args.get("fecha_inicio", "").strip()
     fecha_fin = request.args.get("fecha_fin", "").strip()
     sucursal_raw = request.args.get("sucursal", "").strip()   
 
-    # --- cargar sucursales para el select
+    # cargar sucursales para el select
     db.cursor.execute("SELECT id, nombre FROM sucursal")
     sucursales = db.cursor.fetchall()
 
-    # --- convertir sucursal a int si corresponde, sino None
+    #convertir sucursal a int si corresponde, sino None
+    #Convierte el ID de sucursal a número si se pasó algo válido.
+    #Si no es un número, queda None (sin filtro).
     selected_sucursal = None
     if sucursal_raw != "":
         try:
@@ -198,6 +204,7 @@ def reportes():
         if not s:
             return None
         try:
+            #Convierte las fechas a objetos datetime y asegura el formato YYYY-MM-DD.
             dt = datetime.strptime(s, "%Y-%m-%d")
             return dt.strftime("%Y-%m-%d")   # aseguramos formato
         except Exception:
